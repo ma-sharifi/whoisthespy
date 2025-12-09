@@ -114,7 +114,7 @@ public class GameController {
     private void broadcastPlayersUpdate(UUID gameId, java.util.List<UUID> players) {
         Map<String, Object> update = new HashMap<>();
         update.put("players", players);
-        messagingTemplate.convertAndSend("/topic/game/" + gameId + "/players", update);
+        messagingTemplate.convertAndSend((String)("/topic/game/" + gameId + "/players"), (Object)update);
     }
     
     private void broadcastGameUpdate(Game game) {
