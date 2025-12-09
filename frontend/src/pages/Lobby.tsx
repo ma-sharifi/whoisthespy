@@ -38,7 +38,7 @@ function Lobby() {
     // Connect WebSocket
     wsService.connect().then(() => {
       // Subscribe to player updates
-      wsService.subscribe(`/topic/game/${gameId}/players`, (data) => {
+      wsService.subscribe(`/topic/game/${gameId}/players`, () => {
         loadGame()
       })
     }).catch((err) => {
