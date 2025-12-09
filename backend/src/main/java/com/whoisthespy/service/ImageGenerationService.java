@@ -2,7 +2,7 @@ package com.whoisthespy.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.image.ImageGeneration;
+import org.springframework.ai.image.Image;
 import org.springframework.ai.image.ImagePrompt;
 import org.springframework.ai.image.ImageResponse;
 import org.springframework.ai.openai.OpenAiImageModel;
@@ -15,7 +15,6 @@ import org.springframework.web.client.RestTemplate;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -51,18 +50,17 @@ public class ImageGenerationService {
                 throw new RuntimeException("Failed to generate image: null response");
             }
             
-            // Spring AI returns a list of ImageGeneration objects
-            List<ImageGeneration> imageGenerations = response.getResult().getOutput();
-            if (imageGenerations == null || imageGenerations.isEmpty()) {
+            // Spring AI returns an Image object
+            Image image = response.getResult().getOutput();
+            if (image == null) {
                 throw new RuntimeException("Failed to generate image: empty output");
             }
             
-            ImageGeneration imageGeneration = imageGenerations.get(0);
-            String imageUrl = imageGeneration.getUrl();
+            String imageUrl = image.getUrl();
             
             if (imageUrl == null || imageUrl.isEmpty()) {
                 // Try alternative: get b64_json if URL is not available
-                String b64Json = imageGeneration.getB64Json();
+                String b64Json = image.getB64Json();
                 if (b64Json != null && !b64Json.isEmpty()) {
                     // Decode base64 and save
                     byte[] imageBytes = java.util.Base64.getDecoder().decode(b64Json);

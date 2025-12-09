@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { gameApi, Game } from '../api/client'
+import { gameApi, type Game } from '../api/client'
 import { wsService } from '../services/websocket'
 import '../App.css'
 
@@ -49,12 +49,12 @@ function Game() {
       })
 
       // Subscribe to turn updates
-      wsService.subscribe(`/topic/game/${gameId}/turn`, (data) => {
+      wsService.subscribe(`/topic/game/${gameId}/turn`, () => {
         loadGame()
       })
 
       // Subscribe to player updates
-      wsService.subscribe(`/topic/game/${gameId}/players`, (data) => {
+      wsService.subscribe(`/topic/game/${gameId}/players`, () => {
         loadGame()
       })
     }).catch((err) => {
@@ -117,7 +117,6 @@ function Game() {
   const role = isSpy ? 'spy' : 'civilian'
   const word = isSpy ? game.spyWord : game.civilianWord
   const currentPlayerIndex = game.currentTurnIndex % (game.players.length || 1)
-  const currentPlayerId = game.players[currentPlayerIndex]
 
   return (
     <div className="container">
