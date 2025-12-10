@@ -23,15 +23,9 @@ spring:
     baseline-on-migrate: true
   
   ai:
-    openai:
-      api-key: ${OPENAI_API_KEY:your-api-key-here}
-      image:
-        options:
-          model: dall-e-3
-          n: 1
-          size: 1024x1024
-          quality: standard
-          response-format: url
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:-api-key}
 
 server:
   port: 8080
