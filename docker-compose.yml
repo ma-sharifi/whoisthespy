@@ -29,7 +29,7 @@ services:
       DB_NAME: whoisthespy
       DB_USER: postgres
       DB_PASSWORD: postgres
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-AIzaSyCNuThstIKfhVAuYhd8r53K3ZPvhuU6DwY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-your-api-key-here}
       IMAGE_STORAGE_PATH: /tmp/whoisthespy/images
     ports:
       - "8080:8080"
