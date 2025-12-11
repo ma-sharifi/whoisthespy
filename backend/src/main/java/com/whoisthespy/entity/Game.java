@@ -47,8 +47,11 @@ public class Game {
     @Column(name = "spy_word")
     private String spyWord;
     
-    @Column(name = "current_image_url")
-    private String currentImageUrl;
+    @Column(name = "generated_name")
+    private String generatedName;
+    
+    @Column(name = "generated_summary", length = 1000)
+    private String generatedSummary;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "game_state")

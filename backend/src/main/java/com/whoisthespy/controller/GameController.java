@@ -2,7 +2,6 @@ package com.whoisthespy.controller;
 
 import com.whoisthespy.entity.Game;
 import com.whoisthespy.service.GameService;
-import com.whoisthespy.service.ImageGenerationService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +18,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class GameController {
     private final GameService gameService;
-    private final ImageGenerationService imageGenerationService;
     private final SimpMessagingTemplate messagingTemplate;
     
     @PostMapping("/create")
@@ -82,10 +80,10 @@ public class GameController {
         }
     }
     
-    @PostMapping("/{gameId}/generateImage")
-    public ResponseEntity<ImageResponse> generateImage(
+    @PostMapping("/{gameId}/generateName")
+    public ResponseEntity<NameResponse> generateName(
             @PathVariable UUID gameId,
-            @RequestBody GenerateImageRequest request) {
+            @RequestBody GenerateNameRequest request) {
         try {
             Game game = gameService.getGame(gameId);
             
@@ -93,19 +91,16 @@ public class GameController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             
-            String word = request.getWord() != null ? request.getWord() : game.getCivilianWord();
-            String role = request.getRole() != null ? request.getRole() : "civilian";
+            game = gameService.generateNewName(gameId);
             
-            String imageUrl = imageGenerationService.generateAndStoreImage(word, role);
-            game = gameService.updateGameImageUrl(gameId, imageUrl);
+            // Broadcast name update
+            Map<String, Object> nameUpdate = new HashMap<>();
+            nameUpdate.put("name", game.getGeneratedName());
+            nameUpdate.put("summary", game.getGeneratedSummary());
+            nameUpdate.put("gameId", gameId);
+            messagingTemplate.convertAndSend("/topic/game/" + gameId + "/name", nameUpdate);
             
-            // Broadcast image update
-            Map<String, Object> imageUpdate = new HashMap<>();
-            imageUpdate.put("imageUrl", imageUrl);
-            imageUpdate.put("gameId", gameId);
-            messagingTemplate.convertAndSend("/topic/game/" + gameId + "/image", imageUpdate);
-            
-            return ResponseEntity.ok(new ImageResponse(imageUrl));
+            return ResponseEntity.ok(new NameResponse(game.getGeneratedName(), game.getGeneratedSummary()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -155,10 +150,8 @@ public class GameController {
     }
     
     @Data
-    public static class GenerateImageRequest {
+    public static class GenerateNameRequest {
         private UUID hostUserId;
-        private String word;
-        private String role;
     }
     
     @Data
@@ -172,7 +165,8 @@ public class GameController {
         private Integer currentTurnIndex;
         private String civilianWord;
         private String spyWord;
-        private String currentImageUrl;
+        private String generatedName;
+        private String generatedSummary;
         private Game.GameState gameState;
         
         public GameResponse(Game game) {
@@ -185,17 +179,20 @@ public class GameController {
             this.currentTurnIndex = game.getCurrentTurnIndex();
             this.civilianWord = game.getCivilianWord();
             this.spyWord = game.getSpyWord();
-            this.currentImageUrl = game.getCurrentImageUrl();
+            this.generatedName = game.getGeneratedName();
+            this.generatedSummary = game.getGeneratedSummary();
             this.gameState = game.getGameState();
         }
     }
     
     @Data
-    public static class ImageResponse {
-        private String imageUrl;
+    public static class NameResponse {
+        private String name;
+        private String summary;
         
-        public ImageResponse(String imageUrl) {
-            this.imageUrl = imageUrl;
+        public NameResponse(String name, String summary) {
+            this.name = name;
+            this.summary = summary;
         }
     }
 }

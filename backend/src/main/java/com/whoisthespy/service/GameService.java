@@ -4,6 +4,7 @@ import com.whoisthespy.entity.Game;
 import com.whoisthespy.entity.User;
 import com.whoisthespy.repository.GameRepository;
 import com.whoisthespy.repository.UserRepository;
+import com.whoisthespy.service.NameGenerationService.GeneratedName;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import java.util.*;
 public class GameService {
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
+    private final NameGenerationService nameGenerationService;
     
     private static final String CIVILIAN_WORDS = "cat,dog,house,car,tree,book,phone,computer,table,chair";
     private static final String SPY_WORDS = "animal,pet,home,vehicle,plant,object,device,machine,furniture,seat";
@@ -68,7 +70,12 @@ public class GameService {
             throw new IllegalArgumentException("Invalid number of spies");
         }
         
-        // Assign words
+        // Generate name with summary using AI
+        GeneratedName generatedName = nameGenerationService.generateName();
+        game.setGeneratedName(generatedName.getName());
+        game.setGeneratedSummary(generatedName.getSummary());
+        
+        // Assign words (keep for backward compatibility, but use generated name as primary)
         String[] civilianWords = CIVILIAN_WORDS.split(",");
         String[] spyWords = SPY_WORDS.split(",");
         Random random = new Random();
@@ -109,10 +116,14 @@ public class GameService {
             .orElseThrow(() -> new IllegalArgumentException("Game not found: " + gameId));
     }
     
-    public Game updateGameImageUrl(UUID gameId, String imageUrl) {
+    public Game generateNewName(UUID gameId) {
         Game game = gameRepository.findById(gameId)
             .orElseThrow(() -> new IllegalArgumentException("Game not found: " + gameId));
-        game.setCurrentImageUrl(imageUrl);
+        
+        GeneratedName generatedName = nameGenerationService.generateName();
+        game.setGeneratedName(generatedName.getName());
+        game.setGeneratedSummary(generatedName.getSummary());
+        
         return gameRepository.save(game);
     }
     
